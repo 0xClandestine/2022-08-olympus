@@ -191,15 +191,11 @@ contract OlympusGovernance is Policy {
 
         // undo any previous endorsement the user made on these instructions
         uint256 previousEndorsement = userEndorsementsForProposal[proposalId_][msg.sender];
-        totalEndorsementsForProposal[proposalId_] -= previousEndorsement;
 
         // reapply user endorsements with most up-to-date votes
         userEndorsementsForProposal[proposalId_][msg.sender] = userVotes;
 
-        // total user votes cannot exceed total supply
-        unchecked {
-            totalEndorsementsForProposal[proposalId_] += userVotes;
-        }
+        totalEndorsementsForProposal[proposalId_] = totalEndorsementsForProposal[proposalId_] - previousEndorsement + userVotes;
 
         emit ProposalEndorsed(proposalId_, msg.sender, userVotes);
     }
