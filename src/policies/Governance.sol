@@ -195,7 +195,11 @@ contract OlympusGovernance is Policy {
 
         // reapply user endorsements with most up-to-date votes
         userEndorsementsForProposal[proposalId_][msg.sender] = userVotes;
-        totalEndorsementsForProposal[proposalId_] += userVotes;
+
+        // total user votes cannot exceed total supply
+        unchecked {
+            totalEndorsementsForProposal[proposalId_] += userVotes;
+        }
 
         emit ProposalEndorsed(proposalId_, msg.sender, userVotes);
     }
