@@ -133,9 +133,20 @@ contract OlympusPrice is Module {
 
         // Calculate new moving average
         if (currentPrice > earliestPrice) {
-            _movingAverage += (currentPrice - earliestPrice) / numObs;
+
+            unchecked {
+                priceDelta = currentPrice - earliestPrice;
+            }
+
+            _movingAverage += priceDelta / numObs;
+
         } else {
-            _movingAverage -= (earliestPrice - currentPrice) / numObs;
+
+            unchecked {
+                priceDelta = earliestPrice - currentPrice;
+            }
+
+            _movingAverage -= priceDelta / numObs;
         }
 
         // Push new observation into storage and store timestamp taken at
