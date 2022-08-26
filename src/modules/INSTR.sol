@@ -41,7 +41,12 @@ contract OlympusInstructions is Module {
     /// @notice Store a list of Instructions to be executed in the future.
     function store(Instruction[] calldata instructions_) external permissioned returns (uint256) {
         uint256 length = instructions_.length;
-        uint256 instructionsId = ++totalInstructions;
+        uint256 instructionsId;
+
+        unchecked {
+            instructionsId = ++totalInstructions;
+        }
+
 
         Instruction[] storage instructions = storedInstructions[instructionsId];
 
