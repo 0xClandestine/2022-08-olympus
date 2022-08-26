@@ -269,10 +269,11 @@ contract OlympusPrice is Module {
         observations = new uint256[](newObservations);
 
         // Set initialized to false and update state variables
-        initialized = false;
-        lastObservationTime = 0;
-        _movingAverage = 0;
-        nextObsIndex = 0;
+        delete initialized;
+        delete lastObservationTime;
+        delete _movingAverage;
+        delete nextObsIndex;
+        
         movingAverageDuration = movingAverageDuration_;
         numObservations = uint32(newObservations);
 
