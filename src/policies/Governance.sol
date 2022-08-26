@@ -248,10 +248,13 @@ contract OlympusGovernance is Policy {
             revert UserAlreadyVoted();
         }
 
-        if (for_) {
-            yesVotesForProposal[activeProposal.proposalId] += userVotes;
-        } else {
-            noVotesForProposal[activeProposal.proposalId] += userVotes;
+        // total votes cannot exceed totalSupply
+        unchecked {
+            if (for_) {
+                yesVotesForProposal[activeProposal.proposalId] += userVotes;
+            } else {
+                noVotesForProposal[activeProposal.proposalId] += userVotes;
+            }
         }
 
         userVotesForProposal[activeProposal.proposalId][msg.sender] = userVotes;
