@@ -275,7 +275,9 @@ contract OlympusGovernance is Policy {
 
         Instruction[] memory instructions = INSTR.getInstructions(activeProposal.proposalId);
 
-        for (uint256 step; step < instructions.length; ) {
+        uint256 instructionsLength = instructions.length;
+
+        for (uint256 step; step < length;) {
             kernel.executeAction(instructions[step].action, instructions[step].target);
             unchecked {
                 ++step;
