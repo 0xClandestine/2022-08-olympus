@@ -138,7 +138,9 @@ contract OlympusHeart is IHeart, Policy, ReentrancyGuard {
 
     /// @inheritdoc IHeart
     function resetBeat() external onlyRole("heart_admin") {
-        lastBeat = block.timestamp - frequency();
+        unchecked {
+            lastBeat = block.timestamp - frequency();
+        }
     }
 
     /// @inheritdoc IHeart
