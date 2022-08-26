@@ -90,8 +90,16 @@ contract OlympusHeart is IHeart, Policy, ReentrancyGuard {
 
     /// @inheritdoc IHeart
     function beat() external nonReentrant {
-        if (!active) revert Heart_BeatStopped();
-        if (block.timestamp < lastBeat + frequency()) revert Heart_OutOfCycle();
+
+        if (!active) 
+            revert Heart_BeatStopped();
+        
+        uint256 _lastBeat = lastBeat;
+
+        unchecked {
+            if (block.timestamp < _lastBeat + frequency()) 
+                revert Heart_OutOfCycle();
+        }
 
         // Update the moving average on the Price module
         PRICE.updateMovingAverage();
@@ -100,7 +108,9 @@ contract OlympusHeart is IHeart, Policy, ReentrancyGuard {
         _operator.operate();
 
         // Update the last beat timestamp
-        lastBeat += frequency();
+        unchecked {
+            lastBeat = _lastBeat + frequency();
+        }
 
         // Issue reward to sender
         _issueReward(msg.sender);
