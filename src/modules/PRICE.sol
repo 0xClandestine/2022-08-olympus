@@ -178,12 +178,8 @@ contract OlympusPrice is Module {
             // Use a multiple of observation frequency to determine what is too old to use.
             // Price feeds will not provide an updated answer if the data doesn't change much.
             // This would be similar to if the feed just stopped updating; therefore, we need a cutoff.
-            
-            unchecked {
-                if (updatedAt < block.timestamp - 3 * uint256(observationFrequency))
-                    revert Price_BadFeed(address(_ohmEthPriceFeed));
-            }
-
+            if (updatedAt < block.timestamp - 3 * uint256(observationFrequency))
+                revert Price_BadFeed(address(_ohmEthPriceFeed));
             ohmEthPrice = uint256(ohmEthPriceInt);
 
             int256 reserveEthPriceInt;
