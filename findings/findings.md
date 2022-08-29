@@ -3,7 +3,7 @@
 
 **Severity:** *Gas Optimization*
 
-**Context:** [INSTR.sol#L44](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/INSTR.sol#L44), [PRICE.sol#144](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L144), [PRICE.sol#144](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L144)
+**Context:** [INSTR.sol#L44](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/INSTR.sol#L44), [PRICE.sol#144](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L144), [PRICE.sol#144](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L144), [Governance.sol#L251](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L251)
 
 
 **Description:** Arithmetic checks aren't necessary when logic cannot realistically underflow/overflow.
@@ -58,6 +58,25 @@
 +        _movingAverage -= priceDelta / numObs;
 +    }
 ```
+
+**Recommendation:** [Governance.sol#L251](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L251)
+
+```solidity
+-    if (for_) {
+-        yesVotesForProposal[activeProposal.proposalId] += userVotes;
+-    } else {
+-        noVotesForProposal[activeProposal.proposalId] += userVotes;
+-    }
+    
++    // total votes cannot exceed totalSupply
++    unchecked {
++        if (for_) {
++            yesVotesForProposal[activeProposal.proposalId] += userVotes;
++        } else {
++            noVotesForProposal[activeProposal.proposalId] += userVotes;
++        }
++    }
+```
 ___
 
 **Severity:** *Gas Optimization*
@@ -98,11 +117,11 @@ ___
 
 **Severity:** *Gas Optimization*
 
-**Context:** [PRICE.sol#L252](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L278)
+**Context:** [Governance.sol#L278](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L278), [PRICE.sol#L122](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L122)
 
 **Description:** Cache state variables and array lengths before readings them multiple times (like in a loop).
 
-**Recommendation:** [PRICE.sol#L252](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L278)
+**Recommendation:** [Governance.sol#L278](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L278)
 ```solidity
 -    for (uint256 step; step < instructions.length; ) {
     
@@ -111,7 +130,7 @@ ___
 +    for (uint256 step; step < length;) {
 ```
 
-**Recommendation:** [PRICE.sol#L252](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L278)
+**Recommendation:** [PRICE.sol#L122](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L122)
 ```solidity
 
 // 3 SLOADs saved
