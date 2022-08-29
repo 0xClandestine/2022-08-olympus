@@ -93,3 +93,59 @@ ___
 +    delete _movingAverage;
 +    delete nextObsIndex;
 ```
+
+___
+
+**Severity:** *Gas Optimization*
+
+**Context:** [PRICE.sol#L252](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L278)
+
+**Description:** Cache state variables and array lengths before readings them multiple times (like in a loop).
+
+**Recommendation:** [PRICE.sol#L252](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L278)
+```solidity
+-    for (uint256 step; step < instructions.length; ) {
+    
++    uint256 instructionsLength = instructions.length;
++
++    for (uint256 step; step < length;) {
+```
+
+**Recommendation:** [PRICE.sol#L252](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L278)
+```solidity
+
+function updateMovingAverage() external permissioned {
+    // Revert if not initialized
+    if (!initialized) revert Price_NotInitialized();
+
+    // Cache number of observations to save gas.
+    uint32 numObs = numObservations;
+
++    // Cache next observation index to save gas.
++    uint256 nextObs = nextObsIndex; // avoid SLOADs
+
+    // Get earliest observation in window
+-   uint256 earliestPrice = observations[nextObsIndex];
++   uint256 earliestPrice = observations[nextObs]; // avoid SLOAD
+
+    uint256 currentPrice = getCurrentPrice();
+
+    // Calculate new moving average
+    if (currentPrice > earliestPrice) {
+        _movingAverage += (currentPrice - earliestPrice) / numObs;
+    } else {
+        _movingAverage -= (earliestPrice - currentPrice) / numObs;
+    }
+
+    // Push new observation into storage and store timestamp taken at
+-    observations[nextObsIndex] = currentPrice;
++    observations[nextObs] = currentPrice; // avoid SLOAD
+    lastObservationTime = uint48(block.timestamp);
+-    nextObsIndex = (nextObsIndex + 1) % numObs;
++    nextObsIndex = (nextObs + 1) % numObs;
+
+    emit NewObservation(block.timestamp, currentPrice, _movingAverage);
+}
+
+
+```

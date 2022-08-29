@@ -127,7 +127,7 @@ contract OlympusPrice is Module {
         uint32 numObs = numObservations;
 
         // Cache nextObsIndex to save gas.
-        uint256 nextObs = nextObsIndex;
+        uint32 nextObs = nextObsIndex;
 
         // Get earliest observation in window
         uint256 earliestPrice = observations[nextObs];
