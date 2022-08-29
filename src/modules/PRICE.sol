@@ -152,12 +152,7 @@ contract OlympusPrice is Module {
         // Push new observation into storage and store timestamp taken at
         observations[nextObsIndex] = currentPrice;
         lastObservationTime = uint48(block.timestamp);
-
-        unchecked {
-            ++nextObsIndex;
-        }
-
-        nextObsIndex %= numObs;
+        nextObsIndex = (nextObsIndex + 1) % numObs;
 
         emit NewObservation(block.timestamp, currentPrice, _movingAverage);
     }
