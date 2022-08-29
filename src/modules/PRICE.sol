@@ -123,11 +123,14 @@ contract OlympusPrice is Module {
         // Revert if not initialized
         if (!initialized) revert Price_NotInitialized();
 
-        // Cache numbe of observations to save gas.
+        // Cache number of observations to save gas.
         uint32 numObs = numObservations;
 
+        // Cache nextObsIndex to save gas.
+        uint256 nextObs = nextObsIndex;
+
         // Get earliest observation in window
-        uint256 earliestPrice = observations[nextObsIndex];
+        uint256 earliestPrice = observations[nextObs];
 
         uint256 currentPrice = getCurrentPrice();
 
@@ -150,9 +153,14 @@ contract OlympusPrice is Module {
         }
 
         // Push new observation into storage and store timestamp taken at
-        observations[nextObsIndex] = currentPrice;
+        observations[nextObs] = currentPrice;
         lastObservationTime = uint48(block.timestamp);
-        nextObsIndex = (nextObsIndex + 1) % numObs;
+
+        unchecked {
+            ++nextObs;
+        }
+
+        nextObsIndex = nextObs % numObs;
 
         emit NewObservation(block.timestamp, currentPrice, _movingAverage);
     }
