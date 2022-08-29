@@ -3,7 +3,7 @@
 
 **Severity:** *Gas Optimization*
 
-**Context:** [INSTR.sol#L44](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/INSTR.sol#L44), [PRICE.sol#144](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L144), [PRICE.sol#144](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L144), [Governance.sol#L251](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L251)
+**Context:** [INSTR.sol#L44](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/INSTR.sol#L44), [PRICE.sol#144](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L144), [PRICE.sol#135](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#135), [Governance.sol#L251](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L251)
 
 
 **Description:** Arithmetic checks aren't necessary when logic cannot realistically underflow/overflow.
@@ -166,5 +166,46 @@ function updateMovingAverage() external permissioned {
 +    nextObsIndex = (nextObs + 1) % numObs; // avoid SLOAD
 
     emit NewObservation(block.timestamp, currentPrice, _movingAverage);
+}
+```
+
+___
+
+**Severity:** *Gas Optimization*
+
+**Context:** [Governance.sol#L194](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L194)
+
+**Description:** Mutating state variables multiple times in a function should be avoided when possible.
+
+**Recommendation:** [Governance.sol#L194](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L194)
+
+**Note:** a = a + b or a = a - b is slightly cheaper than a += b or a -= b when mutating mappings. This can be applied other places in the codebase as well.
+
+```solidity
+
+// 1 SSTORE saved
+
+function endorseProposal(uint256 proposalId_) external {
+    uint256 userVotes = VOTES.balanceOf(msg.sender);
+
+    if (proposalId_ == 0) {
+        revert CannotEndorseNullProposal();
+    }
+
+    Instruction[] memory instructions = INSTR.getInstructions(proposalId_);
+    if (instructions.length == 0) {
+        revert CannotEndorseInvalidProposal();
+    }
+
+    // undo any previous endorsement the user made on these instructions
+    uint256 previousEndorsement = userEndorsementsForProposal[proposalId_][msg.sender];
+-    totalEndorsementsForProposal[proposalId_] -= previousEndorsement;
+
+    // reapply user endorsements with most up-to-date votes
+    userEndorsementsForProposal[proposalId_][msg.sender] = userVotes;
+-    totalEndorsementsForProposal[proposalId_] += userVotes;
++    totalEndorsementsForProposal[proposalId_] = totalEndorsementsForProposal[proposalId_] - previousEndorsement + userVotes; // this can potentially be unchecked
+
+    emit ProposalEndorsed(proposalId_, msg.sender, userVotes);
 }
 ```
