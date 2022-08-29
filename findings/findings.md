@@ -3,7 +3,7 @@
 
 **Severity:** *Gas Optimization*
 
-**Context:** [INSTR.sol#L44](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/INSTR.sol#L44), [PRICE.sol#144](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L144), [PRICE.sol#135](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#135), [Governance.sol#L251](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L251)
+**Context:** [INSTR.sol#L44](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/INSTR.sol#L44), [PRICE.sol#144](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L144), [PRICE.sol#135](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#135), [Governance.sol#L251](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L251), [Heart.sol#L92](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Heart.sol#L92)
 
 
 **Description:** Arithmetic checks aren't necessary when logic cannot realistically underflow/overflow.
@@ -77,6 +77,42 @@
 +        }
 +    }
 ```
+
+**Recommendation:** [Heart.sol#L92](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Heart.sol#L92)
+
+**Note:** Consider setting lastBeat + frequency as an unchecked variable to avoid calculating it 3 times.
+
+```solidity
+function beat() external nonReentrant {
+    if (!active) revert Heart_BeatStopped();
+
+-    if (block.timestamp < lastBeat + frequency()) 
+-        revert Heart_OutOfCycle();
+
++   unchecked {
++       if (block.timestamp < lastBeat + frequency()) 
++            revert Heart_OutOfCycle();
++   }
+
+    // Update the moving average on the Price module
+    PRICE.updateMovingAverage();
+
+    // Trigger price range update and market operations
+    _operator.operate();
+
+    // Update the last beat timestamp
+-    lastBeat += frequency();
+
++    unchecked {
++        lastBeat += frequency();
++    }
+
+    // Issue reward to sender
+    _issueReward(msg.sender);
+
+    emit Beat(block.timestamp);
+}
+```
 ___
 
 **Severity:** *Gas Optimization*
@@ -117,7 +153,7 @@ ___
 
 **Severity:** *Gas Optimization*
 
-**Context:** [Governance.sol#L278](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L278), [PRICE.sol#L122](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L122)
+**Context:** [Governance.sol#L278](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L278), [PRICE.sol#L122](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L122), [Heart.sol#L92](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Heart.sol#L92)
 
 **Description:** Cache state variables and array lengths before readings them multiple times (like in a loop).
 
@@ -133,7 +169,7 @@ ___
 **Recommendation:** [PRICE.sol#L122](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L122)
 ```solidity
 
-// 3 SLOADs saved
+// 2 SLOADs saved
 
 function updateMovingAverage() external permissioned {
     // Revert if not initialized
@@ -169,13 +205,45 @@ function updateMovingAverage() external permissioned {
 }
 ```
 
+
+**Recommendation:** [Heart.sol#L92](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Heart.sol#L92)
+
+```solidity
+
+// 2 SLOADs saved
+
+function beat() external nonReentrant {
+    if (!active) revert Heart_BeatStopped();
+
++    uint256 _lastBeat = lastBeat;
+
+-    if (block.timestamp < lastBeat + frequency()) revert Heart_OutOfCycle();
++    if (block.timestamp < _lastBeat + frequency()) revert Heart_OutOfCycle();
+
+    // Update the moving average on the Price module
+    PRICE.updateMovingAverage();
+
+    // Trigger price range update and market operations
+    _operator.operate();
+
+    // Update the last beat timestamp
+-    lastBeat += frequency();
++    lastBeat = _lastBeat + frequency(); // += causes another SLOAD
+
+    // Issue reward to sender
+    _issueReward(msg.sender);
+
+    emit Beat(block.timestamp);
+}
+
+```
 ___
 
 **Severity:** *Gas Optimization*
 
 **Context:** [Governance.sol#L194](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L194)
 
-**Description:** Mutating state variables multiple times in a function should be avoided when possible.
+**Description:** Mutating a single slot multiple times in a function should be avoided when possible.
 
 **Recommendation:** [Governance.sol#L194](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L194)
 
