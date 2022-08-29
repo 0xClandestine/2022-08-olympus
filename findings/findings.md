@@ -127,7 +127,7 @@ ___
     
 +    uint256 instructionsLength = instructions.length;
 +
-+    for (uint256 step; step < length;) {
++    for (uint256 step; step < instructionsLength;) {
 ```
 
 **Recommendation:** [PRICE.sol#L122](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/modules/PRICE.sol#L122)

@@ -280,7 +280,7 @@ contract OlympusGovernance is Policy {
 
         uint256 instructionsLength = instructions.length;
 
-        for (uint256 step; step < length;) {
+        for (uint256 step; step < instructionsLength;) {
             kernel.executeAction(instructions[step].action, instructions[step].target);
             unchecked {
                 ++step;
