@@ -114,6 +114,8 @@ ___
 **Recommendation:** [PRICE.sol#L252](https://github.com/code-423n4/2022-08-olympus/blob/b5e139d732eb4c07102f149fb9426d356af617aa/src/policies/Governance.sol#L278)
 ```solidity
 
+// 3 SLOADs saved
+
 function updateMovingAverage() external permissioned {
     // Revert if not initialized
     if (!initialized) revert Price_NotInitialized();
@@ -142,10 +144,8 @@ function updateMovingAverage() external permissioned {
 +    observations[nextObs] = currentPrice; // avoid SLOAD
     lastObservationTime = uint48(block.timestamp);
 -    nextObsIndex = (nextObsIndex + 1) % numObs;
-+    nextObsIndex = (nextObs + 1) % numObs;
++    nextObsIndex = (nextObs + 1) % numObs; // avoid SLOAD
 
     emit NewObservation(block.timestamp, currentPrice, _movingAverage);
 }
-
-
 ```
